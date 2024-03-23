@@ -27,9 +27,7 @@ def decoder_for_gpt3(engine,input, max_length, apikey,path_num):
         n=path_num,
         stop=stop,
         api_key=apikey,
-        # 中转，无须用jx_apikeys.json去使用多个key轮询
-        api_base="https://api.keya.pw"
-        
+        # api_base=""
     )
     # print("res:",response)
     cots = [p['text'] for p in response["choices"]]
@@ -37,17 +35,16 @@ def decoder_for_gpt3(engine,input, max_length, apikey,path_num):
     
 
 
-def basic_runner(engine,inputs, max_length,path_num,max_retry=3):
+def basic_runner(engine,inputs, max_length, key_index,path_num,max_retry=3):
     # print("in basic runner-----------------")
     retry = 0
     api_time_interval = 2.0
-    # apikey_list = getKey()
+    apikey_list = getKey()
     # print("keys:",apikey_list)
-    # apikey_dict = dict(enumerate(apikey_list))
-    # key_list = list(apikey_dict.keys())
-    # key_l = key_list[key_index]
-    # apikey = apikey_dict[key_l]
-    apikey = "sk-r2sKCBuQ5XXYWNSt27A56bE5Ed4147278bC53b76365121Bc"
+    apikey_dict = dict(enumerate(apikey_list))
+    key_list = list(apikey_dict.keys())
+    key_l = key_list[key_index]
+    apikey = apikey_dict[key_l]
     get_result = False
     pred = []
     error_msg = ''
@@ -62,43 +59,43 @@ def basic_runner(engine,inputs, max_length,path_num,max_retry=3):
         except openai.error.RateLimitError as e:
             if 'You exceeded your current quota, please check your plan and billing details.' in e.user_message or e.user_message == 'Your account is not active, please check your billing details on our website.':
                 print('出问题的key:',apikey)
-                # apikey_dict.pop(key_l)
-                # key_list.pop(key_index)
-                # if len(key_list)!=0:
-                #     key_index = (key_index) % (len(key_list))
-                #     key_l = key_list[key_index]
-                #     apikey = apikey_dict[key_l]
-                #     time.sleep(api_time_interval)
-                # else:
-                #     print("-------------no key------------")
-                raise e
+                apikey_dict.pop(key_l)
+                key_list.pop(key_index)
+                if len(key_list)!=0:
+                    key_index = (key_index) % (len(key_list))
+                    key_l = key_list[key_index]
+                    apikey = apikey_dict[key_l]
+                    time.sleep(api_time_interval)
+                else:
+                    print("-------------no key------------")
+                    raise e
             elif 'Rate limit reached for text-davinci-003 in organization' in e.user_message:
-                # if 'Limit 200' in  e.user_message:
-                #     print("达到每日200条限制的key：",apikey)
-                # if len(apikey_list)>1:
-                #     key_index = (key_index+1) % len(key_list)
-                #     key_l = key_list[key_index]
-                #     apikey = apikey_dict[key_l]
-                #     time.sleep(api_time_interval)
-                #     # print(apikey)
-                # else:
-                #     print("-------------no key------------")
-                raise e
+                if 'Limit 200' in  e.user_message:
+                    print("达到每日200条限制的key：",apikey)
+                if len(apikey_list)>1:
+                    key_index = (key_index+1) % len(key_list)
+                    key_l = key_list[key_index]
+                    apikey = apikey_dict[key_l]
+                    time.sleep(api_time_interval)
+                    # print(apikey)
+                else:
+                    print("-------------no key------------")
+                    raise e
             elif retry < max_retry:
                 time.sleep(api_time_interval)
                 retry += 1
             else:
                 print('最后的问题apikey:',apikey)
-                # error_msg = e.user_message
-                # apikey_dict.pop(key_l)
-                # key_list.pop(key_index)
-                # if len(key_list)!=0:
-                #     key_index = (key_index) % (len(key_list))
-                #     key_l = key_list[key_index]
-                #     apikey = apikey_dict[key_l]
-                #     time.sleep(api_time_interval)
-                # else:
-                #     print("-------------no key------------")
+                error_msg = e.user_message
+                apikey_dict.pop(key_l)
+                key_list.pop(key_index)
+                if len(key_list)!=0:
+                    key_index = (key_index) % (len(key_list))
+                    key_l = key_list[key_index]
+                    apikey = apikey_dict[key_l]
+                    time.sleep(api_time_interval)
+                else:
+                    print("-------------no key------------")
                 break
         except Exception as e:
             raise e

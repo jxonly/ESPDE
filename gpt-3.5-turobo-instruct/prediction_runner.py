@@ -27,7 +27,7 @@ def decoder_for_gpt3(engine,input, max_length, apikey,path_num):
         n=path_num,
         stop=stop,
         api_key=apikey,
-        api_base="https://api.keya.pw"
+        api_base=""
     )
     # print("res:",response)
     cots = [p['text'] for p in response["choices"]]
